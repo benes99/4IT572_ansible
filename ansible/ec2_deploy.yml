@@ -14,7 +14,7 @@
           Name: Eshop-project
         count: 1
         network:
-          assing_public_ip: yes
+          assign_public_ip: yes
         wait: yes
         security_group: eShop
         aws_access_key: "{{ access_key }}"
