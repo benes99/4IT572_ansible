@@ -11,7 +11,7 @@
         key_name: test
         vpc_subnet_id: subnet-0d44c818b4376e0af
         tags:
-          Name: Eshop-final
+          Name: Eshop-test
         count: 1
         network:
           assing_public_ip: yes
