@@ -90,7 +90,7 @@
   connection: local
   gather_facts: false
   tasks:
-    - name: Gather facts on all Eshop-project instances except the new one
+    - name: Gather facts on all Eshop-project instances
       ec2_instance_info:
         region: us-east-1
         filters:
