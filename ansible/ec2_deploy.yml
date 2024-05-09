@@ -1,9 +1,10 @@
-- name: Deploy to EC2
+---
+- name: Launch and configure new EC2 Instance
   hosts: localhost
   connection: local
-
+  gather_facts: false
   tasks:
-    - name: Launch EC2 Instance
+    - name: Launch new EC2 Instance
       ec2_instance:
         instance_type: t3.medium
         image_id: ami-051f8a213df8bc089
@@ -35,7 +36,7 @@
         timeout: 300
       loop: "{{ ec2_instance_result.instances }}"
 
-- name: Configure EC2 Instances
+- name: Configure new EC2 Instance
   hosts: launched
   connection: ssh
   become: yes
@@ -49,10 +50,13 @@
           - docker
         state: latest
         update_cache: yes
-    - service:
+
+    - name: Start and enable Docker service
+      service:
         name: docker
         state: started
         enabled: yes
+
     - name: Set proper rights to Docker service
       shell: usermod -a -G docker ec2-user
 
@@ -68,6 +72,7 @@
         name: eshop
         tag: latest
         source: build
+
     - name: Run Eshop Docker
       docker_container:
         name: eshop
@@ -78,5 +83,29 @@
 
     - name: Wait for eshop to run
       wait_for:
-        port:
-          80
+        port: 80
+
+- name: Terminate existing Eshop-project instances
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather facts on all Eshop-project instances except the new one
+      ec2_instance_info:
+        region: us-east-1
+        filters:
+          "tag:Name": Eshop-project
+        aws_access_key: "{{ access_key }}"
+        aws_secret_key: "{{ secret_key }}"
+        security_token: "{{ session_token }}"
+      register: existing_instances
+
+    - name: Terminate existing Eshop-project instances except the new one
+      ec2_instance:
+        state: absent
+        ids: "{{ existing_instances.instances | rejectattr('instance_id', 'equalto', ec2_instance_result.instances[0].instance_id) | map(attribute='instance_id') | list }}"
+        wait: yes
+        aws_access_key: "{{ access_key }}"
+        aws_secret_key: "{{ secret_key }}"
+        security_token: "{{ session_token }}"
+      when: existing_instances.instances | length > 1
