@@ -103,6 +103,7 @@
     - name: Terminate existing Eshop-project instances except the new one
       ec2_instance:
         state: absent
+        region: us-east-1
         instance_ids: "{{ existing_instances.instances | rejectattr('instance_id', 'equalto', ec2_instance_result.instances[0].instance_id) | map(attribute='instance_id') | list }}"
         wait: yes
         aws_access_key: "{{ access_key }}"
